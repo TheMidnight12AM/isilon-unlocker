@@ -15,8 +15,8 @@
 #               Root Isilon credentials
 
 # Get POSH SSH
-Import-Module -Name "\\funzone\team\POSH\Powershell\Modules\Posh-SSH.psm1"
-Import-Module -Name "\\funzone\team\POSH\Powershell\Modules\Posh-SSH.psd1"
+Import-Module -Name "C:\Powershell\Modules\Posh-SSH.psm1"
+Import-Module -Name "C:\Powershell\Modules\Posh-SSH.psd1"
 
 $username = 'root'
 $password = ('arootpassword' | ConvertTo-SecureString -AsPlainText -Force)
