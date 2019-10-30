@@ -1,25 +1,11 @@
-﻿# Isilon Unlocker
-# Written By Joshua Woleben
-# 10/7/2019
-# PURPOSE: To unlock files, disconnect users, or specific sessions on an EMC Isilon Samba share
-# USAGE: Type part of the file path or username into the appropriate field and click the corresponding search button.
-#        The data grid will populate with the array name, the session ID, the file path, and user name.
-#        Select one session to disconnect all sessions with that username or all sessions connected to that file.
-#         Ctrl+Click or Shift+Click multiple sesions to disconnect those items specifically.
-#         Set $username to root (or its equivalent) and either hardcode the $password field, or prompt for it or load from Secure file.
-#         Replace "isilon.example.com" with your DNS entry for the primary node.
-# REQUIREMENTS:
-#               POSH-SSH
-#               PowerShell 3.0+
-#               Windows Presentation Framework
-#               Root Isilon credentials
+﻿# Isilon stopper
 
 # Get POSH SSH
-Import-Module -Name "C:\Powershell\Modules\Posh-SSH.psm1"
-Import-Module -Name "C:\Powershell\Modules\Posh-SSH.psd1"
+Import-Module -Name "networkshare\Powershell\Modules\Posh-SSH.psm1"
+Import-Module -Name "networkshare\Powershell\Modules\Posh-SSH.psd1"
 
 $username = 'root'
-$password = ('arootpassword' | ConvertTo-SecureString -AsPlainText -Force)
+$password = ('Pa$$w0rd' | ConvertTo-SecureString -AsPlainText -Force)
 $creds = New-Object -TypeName System.Management.Automation.PSCredential ($username,$password)
 
 $script:result_mode = "NONE"
@@ -43,7 +29,6 @@ $script:file = ""
         <Button x:Name="UserSearchButton" Content="Search for User" Margin="10,10,10,0" VerticalAlignment="Top" Height="25"/> 
         <Button x:Name="ClearFormButton" Content="Clear Form" Margin="10,10,10,0" VerticalAlignment="Top" Height="25"/>
         <Label x:Name="ResultsLabel" Content="Search Results"/>
-        <Label x:Name="ResultsHeader" Content="Session ID, Path, User"/>
         <DataGrid x:Name="Results" AutoGenerateColumns="True" Height="400">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Array" Binding="{Binding Array}" Width="100"/>
@@ -93,15 +78,15 @@ $FileSearchButton.Add_Click({
 
 
 
-    $ssh_session = New-SSHSession -ComputerName "isilon.example.com" -Credential $creds
+    $ssh_session = New-SSHSession -ComputerName "mhs-dal-isi" -Credential $creds
     $output_status = Invoke-SSHCommand -Command $search_command -Session $ssh_session.SessionId
 
     if ($output_status.Output.Count -ge 1) {
         $output_status.Output | ForEach-Object {
-            $array = ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[1].Value.Trim()
-            $id =    ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[2].Value
-            $path = ($_ | Select-String -Pattern  "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[3].Value
-            $script:user = ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[4].Value.Trim()
+            $array = ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[1].Value.Trim()
+            $id =    ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[2].Value
+            $path = ($_ | Select-String -Pattern  "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[3].Value
+            $script:user = ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[4].Value.Trim()
             $Results.AddChild([PSCustomObject]@{Array = $array; SessionID = $id; Path = $path; User= $script:user})
         }
     
@@ -119,14 +104,14 @@ $UserSearchButton.Add_Click({
 
     $search_command = "isi_for_array isi smb openfiles list --format csv --verbose | grep -i `"$search_pattern`""
 
-    $ssh_session = New-SSHSession -ComputerName "isilon.example.com" -Credential $creds
+    $ssh_session = New-SSHSession -ComputerName "mhs-dal-isi" -Credential $creds
     $output_status = Invoke-SSHCommand -Command $search_command -Session $ssh_session.SessionId
     if ($output_status.Output.Count -ge 1) {
         $output_status.Output | ForEach-Object {
-            $array = ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[1].Value.Trim()
-            $id =    ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[2].Value
-            $path = ($_ | Select-String -Pattern  "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[3].Value
-            $script:user = ($_ | Select-String -Pattern "^(isilon.example.com-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[4].Value.Trim()
+            $array = ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[1].Value.Trim()
+            $id =    ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[2].Value
+            $path = ($_ | Select-String -Pattern  "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[3].Value
+            $script:user = ($_ | Select-String -Pattern "^(MHS-DAL-ISI-\d).\s+?(.+?),(.+?),(.+?),.*").Matches.Groups[4].Value.Trim()
             $Results.AddChild([PSCustomObject]@{Array = $array; SessionID = $id; Path = $path; User= $script:user})
         }
         $global:Form.invalidateVisual()
@@ -152,7 +137,7 @@ $StopFileButton.Add_click({
             $search_pattern = $item
             $sessions_to_kill_command  = "isi_for_array isi smb openfiles list --verbose --format csv | egrep '$search_pattern,'  | cut -f1 -d, | cut -f2 -d:"
             Write-Host $sessions_to_kill_command
-            $ssh_session = New-SSHSession -ComputerName "isilon.example.com" -Credential $creds
+            $ssh_session = New-SSHSession -ComputerName "mhs-dal-isi" -Credential $creds
             $output_status = Invoke-SSHCommand -Command $sessions_to_kill_command -Session $ssh_session.SessionId -TimeOut 60
             Write-Host $output_status.Output
             $sessions_to_kill = $output_status.Output -join " "
@@ -180,7 +165,7 @@ $StopUserButton.Add_Click({
             $search_pattern = $item 
             $kill_command = "isi_for_array isi smb sessions delete-user `"$search_pattern`" --force"
             Write-Host $kill_command
-            $ssh_session = New-SSHSession -ComputerName "isilon.example.com" -Credential $creds
+            $ssh_session = New-SSHSession -ComputerName "mhs-dal-isi" -Credential $creds
             $output_status = Invoke-SSHCommand -Command $kill_command -Session $ssh_session.SessionId
             Write-Host $output_status.Output
             Remove-SSHSession -Session $ssh_session.SessionId
@@ -201,7 +186,7 @@ $StopSelectedResultsButton.Add_click({
 
             $kill_command = ("isi_for_array -n $array isi smb openfiles close " + $search_pattern + " --force")
             Write-Host $kill_command
-            $ssh_session = New-SSHSession -ComputerName "isilon.example.com" -Credential $creds
+            $ssh_session = New-SSHSession -ComputerName "mhs-dal-isi" -Credential $creds
             $output_status = Invoke-SSHCommand -Command $kill_command -Session $ssh_session.SessionId
             Write-Host $output_status.Output
             Remove-SSHSession -Session $ssh_session.SessionId
